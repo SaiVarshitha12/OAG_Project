@@ -11,10 +11,10 @@ pipeline {
         stage('Frontend Build') {
             steps {
                 dir('OAG_frontend') {
-                    sh '''
-                        echo "Installing frontend dependencies..."
+                    bat '''
+                        echo Installing frontend dependencies...
                         npm install
-                        echo "Building frontend..."
+                        echo Building frontend...
                         npm run build
                     '''
                 }
