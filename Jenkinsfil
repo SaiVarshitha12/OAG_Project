@@ -1,0 +1,48 @@
+pipeline {
+    agent any
+
+    stages {
+        stage('Checkout') {
+            steps {
+                git branch: 'main', url: 'https://github.com/SaiVarshitha12/OAG_Project.git'
+            }
+        }
+
+        stage('Frontend Build') {
+            steps {
+                dir('OAG_frontend') {
+                    sh '''
+                        echo "Installing frontend dependencies..."
+                        npm install
+                        echo "Building frontend..."
+                        npm run build
+                    '''
+                }
+            }
+        }
+
+        stage('Backend Build') {
+            steps {
+                dir('OAG_backend') {
+                    bat "mvn clean package -DskipTests"
+                }
+            }
+        }
+
+        stage('Archive Artifacts') {
+            steps {
+                archiveArtifacts artifacts: 'OAG_frontend/dist/**', fingerprint: true
+                archiveArtifacts artifacts: 'OAG_backend/target/*.jar', fingerprint: true
+            }
+        }
+    }
+
+    post {
+        success {
+            echo "✅ Frontend & Backend build successful."
+        }
+        failure {
+            echo "❌ Build failed."
+        }
+    }
+}
