@@ -1,0 +1,59 @@
+version: "3.9"
+
+services:
+  # ---------- Database ----------
+  db:
+    image: mysql:8.0
+    container_name: artgallerydb
+    restart: always
+    environment:
+      MYSQL_DATABASE: artgallerydb
+      MYSQL_ROOT_PASSWORD: Thanuja@10
+    ports:
+      - "3307:3306"   # host:container
+    volumes:
+      - db_data:/var/lib/mysql
+    networks:
+      - artgallerydb-net
+
+  # ---------- Backend (Spring Boot) ----------
+  backend:
+    build:
+      context: ./ArtGalleryFinal
+      dockerfile: Dockerfile   # uses your Java 21 multi-stage build
+    container_name: artgallerydb-backend
+    restart: always
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/artgallerydb
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: Thanuja@10
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+    depends_on:
+      - db
+    ports:
+      - "8082:8082"
+    networks:
+      - artgallerydb-net
+
+  # ---------- Frontend (Vite + Nginx) ----------
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile   # uses multi-stage (node build + nginx serve)
+    container_name: artgallerydb-frontend
+    restart: always
+    ports:
+      - "3000:80"   # host 3000 → container 80
+    depends_on:
+      - backend
+    networks:
+      - artgallerydb-net
+
+# ---------- Volumes ----------
+volumes:
+  db_data:
+
+# ---------- Networks ----------
+networks:
+  artgallerydb-net:
+    driver: bridge
